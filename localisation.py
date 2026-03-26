@@ -18,12 +18,16 @@ point0 = canvas.create_oval(195, 195, 205, 205, fill='black')
 def move_point(event):
     if event.keysym == 'Up':
         canvas.move(point, 0, -1)
+      
     elif event.keysym == 'Down':
         canvas.move(point, 0, 1)
     if event.keysym == 'Left':
         canvas.move(point, -1, 0)
     elif event.keysym == 'Right':
         canvas.move(point, 1, 0)
+
+def change_point_position(x, y):
+    canvas.coords(point, x-5, y-5, x+5, y+5)
 
 root.bind('<Key>', move_point)
 root.mainloop()
