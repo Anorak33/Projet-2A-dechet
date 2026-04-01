@@ -1,2 +1,7 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+{
+  "version": 1,
+  "author": "Moi",
+  "editor": "wokwi",
+  "parts": [ { "type": "wokwi-arduino-uno", "id": "uno" } ],
+  "connections": [ ]
+}
