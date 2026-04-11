@@ -1,10 +1,12 @@
 #include <SoftwareSerial.h>
 
-const int trigPin1 = 10; // Trigger (emission)
-const int echoPin1 = 9; // Echo (réception)
-const int trigPin2 = 12; // Trigger (emission)
-const int echoPin2 = 11; // Echo (réception)
+const int trigPinX = 8; // Trigger (émission du signal)
+const int echoPinX = 7; // Echo (réception du signal)
+const int trigPinY = 10; // Trigger (emission)
+const int echoPinY = 9; // Echo (réception)
 
+const int offsetX = 2; // Décalage en cm entre le capteur ultrason X et le centre du LiDAR
+const int offsetY = 1; // Décalage en cm entre le capteur ultrason Y et le centre du LiDAR
 
 SoftwareSerial tfLuna(2, 3);
 
@@ -26,10 +28,10 @@ void setup() {
   tfLuna.begin(115200);
   delay(1000); // On laisse 3 secondes pour bien stabiliser
 
-  pinMode(trigPin1, OUTPUT); // Configuration du port du Trigger comme une SORTIE
-  pinMode(echoPin1, INPUT); // Configuration du port de l'Echo comme une ENTREE
-  pinMode(trigPin2, OUTPUT); // Configuration du port du Trigger comme une SORTIE
-  pinMode(echoPin2, INPUT); // Configuration du port de l'Echo comme une ENTREE
+  pinMode(trigPinX, OUTPUT); // Configuration du port du Trigger comme une SORTIE
+  pinMode(echoPinX, INPUT); // Configuration du port de l'Echo comme une ENTREE
+  pinMode(trigPinY, OUTPUT); // Configuration du port du Trigger comme une SORTIE
+  pinMode(echoPinY, INPUT); // Configuration du port de l'Echo comme une ENTREE
 
   Serial.println("--- Setup OK ---");
 
@@ -40,7 +42,7 @@ void setup() {
 
 
 void loop() {
-  delay(100);
+  delay(5);
   if (tfLuna.available() >= 9) {
     if (tfLuna.read() == 0x59) {
       if (tfLuna.peek() == 0x59) {
@@ -54,30 +56,25 @@ void loop() {
       
 
         // Filtre les valeurs aberrantes
-        if (dist > 1 && dist < 5000) {
-          digitalWrite(trigPin1, LOW);
+        if (dist > 0 && dist < 256) {
+          digitalWrite(trigPinX, LOW);  // Stabilisation du signal
+          delayMicroseconds(5);         
+          digitalWrite(trigPinX, HIGH); // Déclenchement de l'impulsion 
+          delayMicroseconds(10);        // Durée d'impulsion requise pour le capteur
+          digitalWrite(trigPinX, LOW);  // Arrêt de l'impulsion
+
+          // Mesure le temps de retour (timeout de 30ms pour éviter de bloquer la carte)
+          duree1 = pulseIn(echoPinX, HIGH, 50000);
+          distance1 = duree1*0.034/2 + offsetX; // d = v * t * 1/2, v la vitesse du son (0.034 m/ms) et 1/2 pour prendre en compte l'aller-retour
+
+          digitalWrite(trigPinY, LOW);
           delayMicroseconds(5);
-          digitalWrite(trigPin1, HIGH);
+          digitalWrite(trigPinY, HIGH);
           delayMicroseconds(10);
-          digitalWrite(trigPin1, LOW);
+          digitalWrite(trigPinY, LOW);
 
-
-          // Écoute de l'écho
-          duree1 = pulseIn(echoPin1, HIGH);
-
-
-          digitalWrite(trigPin2, LOW);
-          delayMicroseconds(5);
-          digitalWrite(trigPin2, HIGH);
-          delayMicroseconds(10);
-          digitalWrite(trigPin2, LOW);
-
-
-          // Écoute de l'écho
-          duree2 = pulseIn(echoPin2, HIGH);
-          // Si c'est la première valeur valide, on calibre
-          distance1 = duree1*0.034/2;
-          distance2 = duree2*0.034/2;
+          duree2 = pulseIn(echoPinY, HIGH,50000);
+          distance2 = duree2*0.034/2 + offsetY;
           
           Serial.print(dist);
           Serial.print(",");
