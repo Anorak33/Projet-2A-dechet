@@ -1,5 +1,6 @@
-from collections import deque
-from typing import Callable
+"""Programme principal du projet de détection des déchets."""
+
+from types import ModuleType, FunctionType
 from importlib import import_module
 
 from constante import *
@@ -8,15 +9,22 @@ from kalman import filtrage_kalman
 
 
 
-def main(affichage:Callable):
+def main(affichage:FunctionType)->None:
+    """Fonction principale du programme. Elle gère la connexion avec l'Arduino, la lecture des données, le filtrage de Kalman et l'affichage des coordonnées filtrées.
+
+    Args:
+        affichage (FunctionType): La fonction d'affichage à utiliser, choisie par l'utilisateur au lancement du programme. Elle doit prendre en argument un tuple de coordonnées (z,x,y).
+    """
     arduino:serial.Serial = setup_arduino()
-    memoire_coords = setup_memoire(arduino)
+    memoire_coords:deque = setup_memoire(arduino)
     try:
         while True:
-            coords = lecture_donnees(arduino)
-            if coords is not None:
+            coords:list|None = lecture_donnees(arduino)
+            if coords is not None and coords[1] < TAILLE_X_BAC and coords[2] < TAILLE_Y_BAC:
                 memoire_coords.append(coords)
-                coords_filtree = filtrage_kalman(memoire_coords)
+                coords_filtree:tuple = filtrage_kalman(memoire_coords)
+                if coords_filtree[1] > 100 or coords_filtree[2] > 100:
+                    print(f"Coordonnées filtrées hors limites : {coords_filtree}")
                 affichage(coords_filtree)
             time.sleep(0.01)           
     except KeyboardInterrupt:
@@ -34,12 +42,12 @@ if __name__ == "__main__":
     print("Choisissez un mode d'affichage :")
     for i, affichage in enumerate(MODULES_AFFICHAGES):
         print(f"{i+1}. {affichage[0]}")
-    choix_valide = False
+    choix_valide:bool = False
     while not choix_valide:
         try:
-            choix = int(input("Entrez le numéro du mode d'affichage : "))
+            choix:int = int(input("Entrez le numéro du mode d'affichage : "))
             if 1 <= choix <= len(MODULES_AFFICHAGES):
-                module_affichage = import_module(f"affichages.{MODULES_AFFICHAGES[choix-1][1]}")
+                module_affichage:ModuleType = import_module(f"affichages.{MODULES_AFFICHAGES[choix-1][1]}")
                 choix_valide = True
             else:
                 raise ValueError

@@ -5,23 +5,16 @@ const int echoPinX = 7; // Echo (réception du signal)
 const int trigPinY = 10; // Trigger (emission)
 const int echoPinY = 9; // Echo (réception)
 
-const int offsetX = 2; // Décalage en cm entre le capteur ultrason X et le centre du LiDAR
+const int offsetX = 0; // Décalage en cm entre le capteur ultrason X et le centre du LiDAR
 const int offsetY = 1; // Décalage en cm entre le capteur ultrason Y et le centre du LiDAR
 
 SoftwareSerial tfLuna(2, 3);
 
 
-long duree1; // durée de l'echo
-long duree2;
-int distance1;
-int distance2; // distance
-
-
-int distanceCalibree = 0;
-const int seuil = 2; // On met un seuil en cm
-
-
-
+long dureeX; // durée de l'echo
+long dureeY;
+int distanceX;
+int distanceY; // distance
 
 void setup() {
   Serial.begin(115200);
@@ -49,14 +42,14 @@ void loop() {
         tfLuna.read(); // Consomme le deuxième 0x59
         uint8_t low = tfLuna.read();
         uint8_t high = tfLuna.read();
-        int dist = low + (high << 8);
+        int distanceZ = low + (high << 8);
         for(int i=0; i<5; i++) tfLuna.read(); // Vide la trame
 
 
       
 
         // Filtre les valeurs aberrantes
-        if (dist > 0 && dist < 256) {
+        if (distanceZ > 0 && distanceZ < 255) {
           digitalWrite(trigPinX, LOW);  // Stabilisation du signal
           delayMicroseconds(5);         
           digitalWrite(trigPinX, HIGH); // Déclenchement de l'impulsion 
@@ -64,8 +57,8 @@ void loop() {
           digitalWrite(trigPinX, LOW);  // Arrêt de l'impulsion
 
           // Mesure le temps de retour (timeout de 30ms pour éviter de bloquer la carte)
-          duree1 = pulseIn(echoPinX, HIGH, 50000);
-          distance1 = duree1*0.034/2 + offsetX; // d = v * t * 1/2, v la vitesse du son (0.034 m/ms) et 1/2 pour prendre en compte l'aller-retour
+          dureeX = pulseIn(echoPinX, HIGH, 50000);
+          distanceX = dureeX*0.034/2 + offsetX; // d = v * t * 1/2, v la vitesse du son (0.034 m/ms) et 1/2 pour prendre en compte l'aller-retour
 
           digitalWrite(trigPinY, LOW);
           delayMicroseconds(5);
@@ -73,14 +66,15 @@ void loop() {
           delayMicroseconds(10);
           digitalWrite(trigPinY, LOW);
 
-          duree2 = pulseIn(echoPinY, HIGH,50000);
-          distance2 = duree2*0.034/2 + offsetY;
+          dureeY = pulseIn(echoPinY, HIGH,50000);
+          distanceY = dureeY*0.034/2 + offsetY;
           
-          Serial.print(dist);
+        
+          Serial.print(distanceZ);
           Serial.print(",");
-          Serial.print(distance1);
+          Serial.print(distanceX);
           Serial.print(",");
-          Serial.println(distance2);
+          Serial.println(distanceY);
           
         }
       }

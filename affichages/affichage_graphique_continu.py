@@ -1,14 +1,98 @@
+"""Affichage graphique continu d'une grille de colorée en fonction des données du LiDAR."""
+
 import tkinter as tk
+
 from constante import *
 
-def affichage(coords):
+class GrilleCouleur(tk.Tk):
+    def __init__(self, lignes: int, colonnes: int, taille_case: int):
+        """Setup de la fenêtre principale avec une grille de rectangles colorés.
+           Chaque rectangle représente un carré d'un centimètre du bac, et sa couleur dépend de la dernière hauteur mesurée par le LiDAR.
+
+        Args:
+            lignes (int): Le nombre de lignes de la grille
+            colonnes (int): Le nombre de colonnes de la grille
+            taille_case (int): La taille de chaque case en pixels
+        """
+        super().__init__()
+        self.title("Grille Tkinter - couleur par carreau")
+        self.lignes: int = lignes
+        self.colonnes: int = colonnes
+        self.taille_case: int = taille_case
+        self.couleur_initiale: str = couleur_depuis_hauteur(HAUTEUR_LIDAR)
+
+        self.canvas:tk.Canvas = tk.Canvas(
+            self,
+            width=colonnes * taille_case,
+            height=lignes * taille_case,
+            bg="white",
+            highlightthickness=0,
+        )
+        self.canvas.pack(padx=10, pady=10)
+
+        self.rectangles: dict = {}  # (ligne, colonne) -> id rectangle
+
+        self._dessiner_grille()
+
+    def _dessiner_grille(self)->None:
+        """Dessine la grille de rectangles sur le canvas, en stockant les IDs de chaque rectangle pour pouvoir les modifier plus tard."""
+        for i in range(self.lignes):
+            for j in range(self.colonnes):
+                x1: int = j * self.taille_case
+                y1: int = i * self.taille_case
+                x2: int = x1 + self.taille_case
+                y2: int = y1 + self.taille_case
+
+                rect_id: int = self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.couleur_initiale, outline="black")
+                self.rectangles[(i, j)] = rect_id
+
+    def changer_couleur_case(self, hauteur: int, ligne: int, colonne: int)->None:
+        """Change la couleur d'une case de la grille en fonction de la hauteur mesurée.
+
+        Args:
+            hauteur (int): La hauteur mesurée par le LiDAR.
+            ligne (int): La ligne de la case à modifier.
+            colonne (int): La colonne de la case à modifier.
+        """
+        if not (0 <= ligne < self.lignes and 0 <= colonne < self.colonnes):
+            return
+        
+        couleur: str = couleur_depuis_hauteur(hauteur)
+        
+        # Regroupe les cases par blocs de TAILLE_BLOCxTAILLE_BLOC 
+        ligne = (ligne // TAILLE_BLOC) * TAILLE_BLOC
+        colonne = (colonne // TAILLE_BLOC) * TAILLE_BLOC
+
+        for dl in range(0, TAILLE_BLOC):
+            for dc in range(0, TAILLE_BLOC):
+                li = ligne + dl
+                co = colonne + dc
+                if 0 <= li < self.lignes and 0 <= co < self.colonnes:
+                    rid = self.rectangles[(li, co)]
+                    self.canvas.itemconfig(rid, fill=couleur)
+
+        # rect_id = self.rectangles[(int(ligne), int(colonne))]
+        # self.canvas.itemconfig(rect_id, fill=couleur)
+        print(f"Case ({ligne}, {colonne}) mise à jour avec hauteur {hauteur} -> couleur {couleur}")
+
+
+
+def affichage(coords:tuple)->None:
+    """Affiche un point sur une grille en fonction des coordonnées fournies. 
+       La grille est mise à jour en continu, avec une couleur qui dépend de la hauteur mesurée.
+
+    Args:
+        coords (tuple): Les coordonnées à afficher, sous la forme (z, x, y).
+
+    Raises:
+        RuntimeError: Si l'application graphique a été fermée.
+    """
     try:
         app.changer_couleur_case(*coords)
         app.update()
     except Exception as e:
         if repr(e) == "TclError('invalid command name \".!canvas\"')":
             raise RuntimeError ("\nL'application graphique a été fermée. Arrêt du programme...")
-    
         print(f"Erreur lors de l'affichage : {e}")
 
 
@@ -16,63 +100,8 @@ def affichage(coords):
 
 if __name__ == "affichages.affichage_graphique_continu":
     #SETUP
-    
     from affichages.couleur import couleur_depuis_hauteur
+
     print("Affichage graphique continu sélectionné.")
-    class GrilleCouleur(tk.Tk):
-        def __init__(self, lignes, colonnes, taille_case):
-            super().__init__()
-            self.title("Grille Tkinter - couleur par carreau")
-            self.lignes = lignes
-            self.colonnes = colonnes
-            self.taille_case = taille_case
-            self.couleur_initiale = couleur_depuis_hauteur(HAUTEUR_LIDAR)
 
-            self.canvas = tk.Canvas(
-                self,
-                width=colonnes * taille_case,
-                height=lignes * taille_case,
-                bg="white",
-                highlightthickness=0,
-            )
-            self.canvas.pack(padx=10, pady=10)
-
-            self.rectangles = {}  # (ligne, colonne) -> id rectangle
-
-            self._dessiner_grille()
-
-        def _dessiner_grille(self):
-            for i in range(self.lignes):
-                for j in range(self.colonnes):
-                    x1 = j * self.taille_case
-                    y1 = i * self.taille_case
-                    x2 = x1 + self.taille_case
-                    y2 = y1 + self.taille_case
-
-                    rect_id = self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.couleur_initiale, outline="black")
-                    self.rectangles[(i, j)] = rect_id
-
-        def changer_couleur_case(self, hauteur, ligne, colonne):
-            if not (0 <= ligne < self.lignes and 0 <= colonne < self.colonnes):
-                return
-            
-            couleur = couleur_depuis_hauteur(hauteur)
-            
-            # Regroupe les cases par blocs de TAILLE_BLOCxTAILLE_BLOC 
-            ligne = (int(ligne) // TAILLE_BLOC) * TAILLE_BLOC
-            colonne = (int(colonne) // TAILLE_BLOC) * TAILLE_BLOC
-
-            for dl in range(0, TAILLE_BLOC):
-                for dc in range(0, TAILLE_BLOC):
-                    li = ligne + dl
-                    co = colonne + dc
-                    if 0 <= li < self.lignes and 0 <= co < self.colonnes:
-                        rid = self.rectangles[(li, co)]
-                        self.canvas.itemconfig(rid, fill=couleur)
-
-            rect_id = self.rectangles[(int(ligne), int(colonne))]
-            self.canvas.itemconfig(rect_id, fill=couleur)
-            print(f"Case ({ligne}, {colonne}) mise à jour avec hauteur {hauteur} -> couleur {couleur}")
-
-
-    app = GrilleCouleur(lignes=NOMBRE_LIGNES, colonnes=NOMBRE_COLONNES, taille_case=TAILLE_CASE)
+    app = GrilleCouleur(lignes=TAILLE_X_BAC, colonnes=TAILLE_Y_BAC, taille_case=TAILLE_CASE)
