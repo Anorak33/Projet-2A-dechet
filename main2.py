@@ -5,7 +5,7 @@ from importlib import import_module
 
 from constante import *
 from lecture_serial import *
-from kalman import filtrage_kalman
+from kalman2 import setup_filtres, filtrage_kalman
 
 
 
@@ -16,15 +16,13 @@ def main(affichage:FunctionType)->None:
         affichage (FunctionType): La fonction d'affichage à utiliser, choisie par l'utilisateur au lancement du programme. Elle doit prendre en argument un tuple de coordonnées (z,x,y).
     """
     arduino:serial.Serial = setup_arduino()
-    memoire_coords:deque = setup_memoire(arduino)
-
+    filtres_inter, filtres_kalman = setup_filtres()
     try:
         while True:
             coords:list|None = lecture_donnees(arduino)
             # On vérifie que les coordonnées sont valides et dans les limites du bac avant de les ajouter à la mémoire et de les afficher
             if coords is not None and 0 < coords[1] < TAILLE_X_BAC and 0 < coords[2] < TAILLE_Y_BAC:
-                memoire_coords.append(coords)
-                coords_filtree:tuple = filtrage_kalman(memoire_coords)
+                coords_filtree:tuple = filtrage_kalman(filtres_inter,filtres_kalman,coords)
                 affichage(coords_filtree)
             time.sleep(0.01)           
     #Arret en faisant ctrl+c dans le terminal

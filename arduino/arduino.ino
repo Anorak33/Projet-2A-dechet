@@ -5,7 +5,7 @@ const int echoPinX = 7; // Echo (réception du signal)
 const int trigPinY = 10; // Trigger (emission)
 const int echoPinY = 9; // Echo (réception)
 
-const int offsetX = 0; // Décalage en cm entre le capteur ultrason X et le centre du LiDAR
+const int offsetX = 1; // Décalage en cm entre le capteur ultrason X et le centre du LiDAR
 const int offsetY = 1; // Décalage en cm entre le capteur ultrason Y et le centre du LiDAR
 
 SoftwareSerial tfLuna(2, 3);
@@ -13,29 +13,26 @@ SoftwareSerial tfLuna(2, 3);
 
 long dureeX; // durée de l'echo
 long dureeY;
-int distanceX;
-int distanceY; // distance
+int distanceX;  // distance calculée en cm
+int distanceY; 
 
 void setup() {
   Serial.begin(115200);
   tfLuna.begin(115200);
   delay(1000); // On laisse 3 secondes pour bien stabiliser
 
-  pinMode(trigPinX, OUTPUT); // Configuration du port du Trigger comme une SORTIE
-  pinMode(echoPinX, INPUT); // Configuration du port de l'Echo comme une ENTREE
-  pinMode(trigPinY, OUTPUT); // Configuration du port du Trigger comme une SORTIE
-  pinMode(echoPinY, INPUT); // Configuration du port de l'Echo comme une ENTREE
+  pinMode(trigPinX, OUTPUT); // Configuration du port du TriggerX comme une SORTIE
+  pinMode(echoPinX, INPUT); // Configuration du port de l'EchoX comme une ENTREE
+  pinMode(trigPinY, OUTPUT); // Configuration du port du TriggerY comme une SORTIE
+  pinMode(echoPinY, INPUT); // Configuration du port de l'EchoY comme une ENTREE
 
   Serial.println("--- Setup OK ---");
-
-
 }
 
 
 
 
 void loop() {
-  delay(5);
   if (tfLuna.available() >= 9) {
     if (tfLuna.read() == 0x59) {
       if (tfLuna.peek() == 0x59) {
@@ -56,7 +53,7 @@ void loop() {
           delayMicroseconds(10);        // Durée d'impulsion requise pour le capteur
           digitalWrite(trigPinX, LOW);  // Arrêt de l'impulsion
 
-          // Mesure le temps de retour (timeout de 30ms pour éviter de bloquer la carte)
+          // Mesure le temps de retour (timeout de 50ms pour éviter de bloquer la carte)
           dureeX = pulseIn(echoPinX, HIGH, 50000);
           distanceX = dureeX*0.034/2 + offsetX; // d = v * t * 1/2, v la vitesse du son (0.034 m/ms) et 1/2 pour prendre en compte l'aller-retour
 

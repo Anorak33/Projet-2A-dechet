@@ -1,7 +1,7 @@
-"""Module d'affichage console raffiné, qui affiche les coordonnées filtrées de manière plus explicite que le module d'affichage console basique."""
+"""Module d'affichage console raffiné, qui affiche les coordonnées de manière plus explicite que le module d'affichage console basique."""
 
 def affichage(coords:tuple)->None:
-    """Affichage explicite en console
+    """Affichage descriptif en console des coordonnées.
 
     Args:
         coords (tuple): coordonnées à afficher, sous la forme (z,x,y)

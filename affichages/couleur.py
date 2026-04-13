@@ -13,24 +13,22 @@ def couleur_depuis_hauteur(hauteur:int)->str:
     Returns:
         str: La couleur générée sous forme de chaîne hexadécimale.
     """
-    # 1. Normalisation de x entre 0 et 1
+    #Normalisation de x entre 0 et 1
     t:float = hauteur / HAUTEUR_LIDAR
     
-    # 2. Calcul de la puissance 'p' pour que le changement se voie surtout sous B
-    # On veut que pour x=B, le ratio soit encore élevé (ex: 0.8)
-    # t_B = B/A. On cherche p tel que (B/A)^p = 0.8 (ou autre seuil de "douceur")
-    # Ici, on peut fixer p empiriquement ou le calculer.
-    # Plus p est grand, plus la transition est tardive (proche de 0).
+    #Calcul de la puissance 'p' pour que le changement de couleur se voie surtout pour des valeur inferieur à HAUTEUR_EAU (ie pour les déchets au dessus de l'eau)
 
     p:float = np.log(RATIO_COULEUR_EAU) / np.log((HAUTEUR_LIDAR - HAUTEUR_EAU) / HAUTEUR_LIDAR)
     
-    # 3. Application de la courbe
+    #Application de la courbe
     factor:float = np.power(t, p)
     
-    # 4. Interpolation linéaire entre les deux couleurs
-    c0:np.ndarray = np.array([int(COULEUR_HAUTEUR_0[i:i+2], 16) for i in range(1, 7, 2)])
-    cA:np.ndarray = np.array([int(COULEUR_HAUTEUR_MAX[i:i+2], 16) for i in range(1, 7, 2)])
+    #Interpolation entre la couleur au fond de l'eau et la couleur au niveau du capteur
+    c0:np.ndarray = np.array([int(COULEUR_HAUTEUR_0[i:i+2], 16) for i in range(1, 7, 2)]) #coefficient de couleur au niveau du capteur
+    cA:np.ndarray = np.array([int(COULEUR_HAUTEUR_MAX[i:i+2], 16) for i in range(1, 7, 2)]) #coefficient de couleur au fond de l'eau
     
-    # Résultat : (1-factor)*c0 + factor*cA
+    #Résultat : (1-factor)*c0 + factor*cA
     result_color:np.ndarray = (1 - factor) * c0 + factor * cA
+
+    #Conversion du résultat en chaîne hexadécimale
     return f'#{int(result_color[0]):02x}{int(result_color[1]):02x}{int(result_color[2]):02x}'
