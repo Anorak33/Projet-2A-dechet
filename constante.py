@@ -39,3 +39,4 @@ TAILLE_BLOC = 2 #En nombre de cases, doit être un diviseur de NOMBRE_LIGNES et 
 RATIO_COULEUR_EAU = 0.9 #Le ratio de la couleur à la hauteur d'eau par rapport à la couleur au fond de l'eau
 COULEUR_HAUTEUR_0 = "#00FF00" #Couleur pour la hauteur 0, c'est à dire quand un déchet 'touche' le capteur 
 COULEUR_HAUTEUR_MAX = "#0000FF" #Couleur pour la hauteur maximale de détection du lidar, c'est à dire quand il ne detecte rien
+

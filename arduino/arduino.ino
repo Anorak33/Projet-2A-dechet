@@ -29,9 +29,6 @@ void setup() {
   Serial.println("--- Setup OK ---");
 }
 
-
-
-
 void loop() {
   if (tfLuna.available() >= 9) {
     if (tfLuna.read() == 0x59) {
@@ -41,9 +38,6 @@ void loop() {
         uint8_t high = tfLuna.read();
         int distanceZ = low + (high << 8);
         for(int i=0; i<5; i++) tfLuna.read(); // Vide la trame
-
-
-      
 
         // Filtre les valeurs aberrantes
         if (distanceZ > 0 && distanceZ < 255) {
@@ -72,14 +66,10 @@ void loop() {
           Serial.print(distanceX);
           Serial.print(",");
           Serial.println(distanceY);
-          
         }
       }
     }
   }
-
-
-
 
   // Nettoyage rapide du tampon
   if (tfLuna.available() > 15) {

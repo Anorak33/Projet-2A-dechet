@@ -99,8 +99,6 @@ def affichage(coords:tuple)->None:
         print(f"Erreur lors de l'affichage :{e}")
 
 
-
-
 if __name__ == "affichages.affichage_graphique_continu":
     #SETUP
     from affichages.couleur import couleur_depuis_hauteur

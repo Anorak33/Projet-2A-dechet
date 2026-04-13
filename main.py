@@ -25,10 +25,10 @@ def main(affichage:FunctionType)->None:
                 coords_filtree:tuple = filtrage_kalman(filtres_inter,filtres_kalman,coords)
                 affichage(coords_filtree)
             time.sleep(0.01)           
-    #Arret en faisant ctrl+c dans le terminal
+    #Arrêt en faisant ctrl+c dans le terminal
     except KeyboardInterrupt:
         print(f"\nArrêt du programme...")
-    #fermant la fenêtre d'affichage
+    #Arrêt en fermant la fenêtre d'affichage
     except RuntimeError as e:
         print(e)
     except serial.SerialException as e:
