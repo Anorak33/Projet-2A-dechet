@@ -5,6 +5,7 @@ import time
 from collections import deque
 
 from constante import *
+from kalman import *
 
 def setup_arduino()->serial.Serial:
     """Setup de la connexion série avec l'Arduino.
@@ -27,22 +28,26 @@ def setup_arduino()->serial.Serial:
                 return arduino
     raise TimeoutError("Configuration non reçue dans le délai imparti.")
     
-def setup_memoire(arduino:serial.Serial)->deque:
-    """Initalise la mémoire pour limitier la quantitée de valeurs aberrantes initales.
+def setup_filtres(arduino:serial.Serial)->tuple:
+    """On initialise les filtres pour éviter d'avoir des valeur fausses au démarrage du programme
 
     Args:
         arduino (serial.Serial): L'objet de connexion série avec l'Arduino.
 
     Returns:
-        deque: La mémoire initialisée avec les premières valeurs lues.
+        tuple: Les filtres intermédiaire et de Kalman pour les 3 coordonnées
     """
-    memoire:deque = deque(maxlen=TAILLE_MEMOIRE)
-    while len(memoire) < TAILLE_MEMOIRE:
+    filtres_inter:tuple = (FiltreInter(TAILLE_MEMOIRE), FiltreInter(TAILLE_MEMOIRE), FiltreInter(TAILLE_MEMOIRE))
+    filtres_kalman:tuple = (FiltreKalman(0.0, INCERTITUDE, Q, R), FiltreKalman(0.0, INCERTITUDE, Q, R), FiltreKalman(0.0, INCERTITUDE, Q, R))
+
+    i = 0
+    while i < TAILLE_MEMOIRE*3: # On lit au moins 3 fois la taille de la mémoire pour être sûr d'avoir des valeurs stables
         coords:list|None = lecture_donnees(arduino)
         if coords is not None:
-            memoire.append(coords)
-    print("Initialisation de la mémoire terminée.")
-    return memoire
+            filtrage_kalman(filtres_inter,filtres_kalman,coords)
+            i += 1
+    print("Initialisation des filtres terminée.")
+    return filtres_inter, filtres_kalman
 
 def lecture_donnees(arduino:serial.Serial)->list|None:
     """Lecture des données écrite sur la connexion série.

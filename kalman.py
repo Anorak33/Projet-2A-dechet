@@ -1,7 +1,4 @@
-"""Module de filtrage de Kalman
-   Considerant le fait que nous recréons un nouveau filtre de Kalman à chaque itération, ce module pourrait être optimisé.
-   Pour autant, il ne cause pas de problème de performance, et est plus simple d'utilisation, nous le conservons donc tel quel.
-"""
+"""Module du filtre de Kalman"""
 
 import collections
 import numpy as np
@@ -70,47 +67,44 @@ class FiltreKalman:
 
         return self.position
 
-def filtrage_mesure(incertitude:float, q:float, r:float, liste_mesure:list)->float:
+def filtrage_mesure(filtre_inter:FiltreInter, filtre_kalman:FiltreKalman, incertitude:float, q:float, r:float, mesure:int)->float:
     """filtre la mesure en utilisant le filtre de Kalman
 
     Args:
+        filtre_inter (FiltreInter): Le filtre intermédiaire
+        filtre_kalman (FiltreKalman): Le filtre de Kalman
         incertitude (float): L'incertitude initiale
         q (float): Confiance de processus
         r (float): Confiance de mesure
-        liste_mesure (list): La liste des mesures à filtrer
+        mesure (int): La mesure à filtrer
 
     Returns:
         float: La valeur filtrée
     """
 
-    filtre_inter:FiltreInter = FiltreInter(len(liste_mesure))
+    valeur_brut:float = float(mesure)
+    valeur_filtre_inter:float = filtre_inter.filtrer(valeur_brut)
+    valeur_filtre_kalman:float = filtre_kalman.mettre_a_jour(valeur_filtre_inter)
 
-    filtre_kalman:FiltreKalman = FiltreKalman(position=0.0, incertitude=incertitude, q=q, r=r)
-
-    for i in range(len(liste_mesure)):
-        valeur_brut:float = liste_mesure[i]
-        valeur_filtre_inter:float = filtre_inter.filtrer(valeur_brut)
-        valeur_filtre_kalman:float = filtre_kalman.mettre_a_jour(valeur_filtre_inter)
-       
     return valeur_filtre_kalman
 
 
 
-def filtrage_kalman(memoire_coords:collections.deque)->tuple:
+def filtrage_kalman(filtres_inter:tuple,filtres_kalman:tuple,coords:list)->tuple:
     """Filtre les coordonnées en utilisant le filtre de Kalman
 
     Args:
-        memoire_coords (collections.deque): La mémoire des coordonnées à filtrer, doit contenir des tuples (z, x, y)
+        coords (list): La coordonnée brute à filtrer (z, x, y)
+        filtres_inter (tuple): Les filtres intermédiaires pour les 3 coordonnées
+        filtres_kalman (tuple): Les filtres de Kalman pour les 3 coordonnées
 
     Returns:
         tuple: Les coordonnées filtrées (z, x, y)
     """
-    mesure_x:list = [coord[1] for coord in memoire_coords]
-    mesure_y:list = [coord[2] for coord in memoire_coords]
-    mesure_z:list = [coord[0] for coord in memoire_coords]
+    
 
-    x_filtree:int = int(filtrage_mesure(INCERTITUDE, Q, R, mesure_x))
-    y_filtree:int = int(filtrage_mesure(INCERTITUDE, Q, R, mesure_y))
-    z_filtree:int = int(filtrage_mesure(INCERTITUDE, Q, R, mesure_z))
+    x_filtree:int = int(filtrage_mesure(filtres_inter[1], filtres_kalman[1], INCERTITUDE, Q, R, coords[1])) 
+    y_filtree:int = int(filtrage_mesure(filtres_inter[2], filtres_kalman[2], INCERTITUDE, Q, R, coords[2])) 
+    z_filtree:int = int(filtrage_mesure(filtres_inter[0], filtres_kalman[0], INCERTITUDE, Q, R, coords[0]))
 
     return (z_filtree, x_filtree, y_filtree)

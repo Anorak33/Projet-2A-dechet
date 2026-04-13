@@ -1,4 +1,4 @@
-"""Affichage graphique continu d'une grille de colorée en fonction des données du LiDAR."""
+"""Module d'affichage graphique continu d'une grille de colorée en fonction des données du LiDAR."""
 
 import tkinter as tk
 
@@ -63,7 +63,7 @@ class GrilleCouleur(tk.Tk):
         
         #On regroupe les cases par blocs de TAILLE_BLOCxTAILLE_BLOC 
         ligne = (ligne // TAILLE_BLOC) * TAILLE_BLOC
-        colonne = (colonne // TAILLE_BLOC) * TAILLE_BLOC
+        colonne = ((TAILLE_Y_BAC-colonne) // TAILLE_BLOC) * TAILLE_BLOC 
 
         #On change la couleur de toutes les cases du bloc 
         for dl in range(0, TAILLE_BLOC):

@@ -1,3 +1,5 @@
+"""Module d'affichage des coordonnées brutes dans la console"""
+
 def affichage(coords:tuple)->None:
     """Affichage des coordonées brutes.
 
